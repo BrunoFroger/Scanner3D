@@ -109,6 +109,7 @@ void setup()
   // Open serial communications
   Serial.begin(9600);
   delay(1000);
+  Serial.println("\n");
   
   //Debug to Serial
   Serial.print("Initializing SD card... ");
