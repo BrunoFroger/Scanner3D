@@ -64,6 +64,11 @@ int zMS1 = 9;
 int zMS2 = 18;
 int zEnable = 19;
 
+/*******************************************
+ * 
+ *          S E T U P
+ * 
+ *******************************************/
 void setup()
 {
 
@@ -129,6 +134,11 @@ void setup()
   Serial.println("initialization success!");
 }
 
+/*******************************************
+ * 
+ *          L O O P
+ * 
+ *******************************************/
 void loop()
 {
 
@@ -173,7 +183,11 @@ void loop()
   //readFromSD(); //Debug - Read from SD
 }
 
-
+/*******************************************
+ * 
+ *          calibrageZ
+ * 
+ *******************************************/
 void calibrageZ() {
   int distancePlateau = 400;
   int distanceSupport = 800;
@@ -221,7 +235,11 @@ void calibrageZ() {
   Serial.println(texte);
 }
 
-
+/*******************************************
+ * 
+ *          rotateMotor
+ * 
+ *******************************************/
 void rotateMotor(int pinNo, int steps)
 {
 
@@ -236,6 +254,11 @@ void rotateMotor(int pinNo, int steps)
   }
 }
 
+/*******************************************
+ * 
+ *          readAnalogSensor
+ * 
+ *******************************************/
 double readAnalogSensor()
 {
 
@@ -299,31 +322,33 @@ double readAnalogSensor()
         // on remplace la valeur mesuree acceptable par la
         // valeur la plus grande ou plus petite du tableau
         // et on met a jour la somme
-        if (senseValue > moyenne) {
+        if (senseValue > moyenne && senseValue < tblSamples[ptrMaxValue]) {
           // on retranche l'ancienne valeur de la somme
           oldValue = tblSamples[ptrMaxValue];
           sumOfSamples -= oldValue;
           // on remplace la valeur la plus grande par celle mesuree
           tblSamples[ptrMaxValue] = senseValue;
-          sprintf(texte, "remplace %d a la position %d, ", oldValue, ptrMaxValue);
+          sprintf(texte, "remplace %d par %d a la position %d, ", oldValue, senseValue, ptrMaxValue);
           Serial.println(texte);
           // on ajoute la nouvelle valeur a la somme
           sumOfSamples += tblSamples[ptrMaxValue];
-        } else {
+        } else if (senseValue <= moyenne && senseValue > tblSamples[ptrMinValue]) {
           // on retranche l'ancienne valeur de la somme
           oldValue = tblSamples[ptrMinValue];
           sumOfSamples -= oldValue;
           // on remplace la valeur la plus petite par celle mesuree
           tblSamples[ptrMinValue] = senseValue;
-          sprintf(texte, "remplace %d a la position %d, ", oldValue, ptrMinValue);
+          sprintf(texte, "remplace %d par %d a la position %d, ", oldValue, senseValue, ptrMinValue);
           Serial.println(texte);
           // on ajoute la nouvelle valeur a la somme
           sumOfSamples += tblSamples[ptrMinValue];
+        } else {
+          
         }
       } else {
-        sprintf(texte, "valeur %d : pas acceptable : %d, ", i, senseValue);
-        Serial.print(texte);
         // la valeur mesuree n'est pas dans la plage acceptable, on ne fait rien
+        sprintf(texte, "valeur %d : pas entre 25% et 75% : %d, ", i, senseValue);
+        Serial.print(texte);
       }
     }
     // fin du bloc ajoute par BFR
@@ -346,6 +371,11 @@ double readAnalogSensor()
   return senseDistance;
 }
 
+/*******************************************
+ * 
+ *          writeToSD
+ * 
+ *******************************************/
 void writeToSD(double senseDistance)
 {
   // Open file
@@ -379,6 +409,11 @@ void writeToSD(double senseDistance)
   }
 }
 
+/*******************************************
+ * 
+ *          readFromSD
+ * 
+ *******************************************/
 void readFromSD()
 {
   // Open the file for reading:
@@ -405,6 +440,11 @@ void readFromSD()
   }
 }
 
+/*******************************************
+ * 
+ *          mapDouble
+ * 
+ *******************************************/
 double mapDouble(double x, double in_min, double in_max, double out_min, double out_max)
 {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
