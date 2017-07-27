@@ -175,33 +175,51 @@ void loop()
 
 void calibrageZ(){
     int distancePlateau = 400;
-    int tolerance = 10;
-    int minValue = distancePlateau - tolerance;
-    int maxValue = distancePlateau + tolerance;
-    boolean calibrationOK = false;
+    int distanceSupport = 800;
+    int tolerance = 100;
+    int minPlateau = distancePlateau - tolerance;
+    int maxPlateau = distancePlateau + tolerance;
+    int minSupport = distanceSupport - tolerance;
+    int maxSupport = distanceSupport + tolerance;
     int senseValue;
     char texte[50];
     
     sprintf(texte,"Start calibration of Z axis");
     Serial.println(texte);                                                     
     
-    senseValue=analogRead(sensePin); //Perform analogRead
-    sprintf(texte,"valeur %d (%d) : min=%d, max=%d",senseValue,distancePlateau,minValue,maxValue);
+    senseValue=readAnalogSensor(); //Perform analogRead
+    sprintf(texte,"valeur %d (%d) : min=%d, max=%d",senseValue,distancePlateau,minPlateau,maxPlateau);
     Serial.println(texte);
-    while (senseValue < minValue || senseValue > maxValue){
-      if (distancePlateau < senseValue){
-        senseValue -= tolerance; 
-      }else{
-        senseValue += tolerance;
-      }
-      sprintf(texte,"valeur %d (%d)",senseValue,distancePlateau);
+    // phase 1 on on descend jusqu'au plateau
+    boolean enFaceDuPlateau = (senseValue < minPlateau && senseValue > maxPlateau);
+    while (!enFaceDuPlateau){
+      // on n'est pas en face du support
+      // on fait descendre le plateau de 10 pas
+      rotateMotor(zStep, -10);
+      sprintf(texte,"on descends de 10 pas");
+      Serial.println(texte);
+      delay(1000);
+    }    
+    // phase 2 on est en face du plateau on monte
+    while (enFaceDuPlateau){
+      // on est en face du plateau
+      // on fait monter le plateau d'un pas
+      rotateMotor(zStep, 1);
+      sprintf(texte,"on monte d'un pas");
       Serial.println(texte);
       delay(1000);
     }
-    calibrationOK=true;
-    sprintf(texte,"calibration OK");
+    // phase 3 on est au dessus du plateau
+    // on redessend d'un pas
+    rotateMotor(zStep, -1);
+    sprintf(texte,"on descend d'un pas");
+    Serial.println(texte);
+    delay(1000);
+    sprintf(texte,"calibration axe Z OK");
     Serial.println(texte);
 }
+
+
 void rotateMotor(int pinNo, int steps)
 {
   
@@ -226,7 +244,7 @@ double readAnalogSensor()
   int ptrTblSample=0;
   boolean tblSampleFull=false;
   int moyenne, minValue, maxValue, oldValue;
-  int ptrMaxValue=-1, ptrMinValue=-1;
+  int ptrMaxValue=-1, ptrMinValue=-1, ptrminPlateau=-1;
   char texte[50];
 
   int senseValue=0;
